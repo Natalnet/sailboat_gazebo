@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<!-- Basic WAM-V with gazebo plugins for dynamics -->
+<robot xmlns:xacro="http://ros.org/wiki/xacro"
+       name="NBOAT">
+
+  <xacro:arg name="camera_enabled" default="false" />
+  <xacro:arg name="gps_enabled" default="false" />
+  <xacro:arg name="imu_enabled" default="false" />
+  <xacro:arg name="lidar_enabled" default="false" />
+  <xacro:arg name="ground_truth_enabled" default="false" />
+  <xacro:arg name="vrx_sensors_enabled" default="false" />
+
+  <!-- === The WAM-V platform === -->
+  <xacro:include filename="$(find sailboat_gazebo)/urdf/sailboat_gazebo.xacro" />
+
+  <!-- Add a front camera -->
+  <xacro:if value="$(arg camera_enabled)">
+    <xacro:sailboat_camera name="front_camera" y="0.3" x="0.75" P="${radians(15)}" />
+  </xacro:if>
+
+  <!-- Add simulated GPS -->
+  <xacro:if value="$(arg gps_enabled)">
+	  <xacro:sailboat_gps name="gps_sailboat" y="0.2" />
+  </xacro:if>
+
+  <!-- Add Simulated IMU -->
+  <xacro:if value="$(arg imu_enabled)">
+    <xacro:sailboat_imu name="imu_sailboat" y="-0.2" />
+  </xacro:if>
+
+  <!-- Add 3D LIDAR -->
+  <xacro:if value="$(arg lidar_enabled)">
+    <xacro:sailboat_3d_lidar name="lidar_sailboat" y="-0.3" />
+  </xacro:if>
+
+  <!-- Add P3D ground truth -->
+  <xacro:if value="$(arg ground_truth_enabled)">
+    <xacro:sailboat_p3d name="p3d_sailboat"/>
+  </xacro:if>
+
+  <!-- ==== VRX sensor configuration ==== -->
+  <xacro:if value="$(arg vrx_sensors_enabled)">
+
+    <!-- Add a stereo camera pair -->
+    <xacro:sailboat_camera name="front_left_camera" y="0.1" x="0.75" P="${radians(15)}" />
+    <xacro:sailboat_camera name="front_right_camera" y="-0.1" x="0.75" P="${radians(15)}" />
+
+    <!-- Add a camera facing right -->
+    <xacro:sailboat_camera name="middle_right_camera" y="-0.45" P="${radians(15)}" Y="${radians(-90)}" />
+
+    <!-- Add simulated GPS -->
+    <xacro:sailboat_gps name="gps_sailboat" y="0.2" />
+
+    <!-- Add Simulated IMU -->
+    <xacro:sailboat_imu name="imu_sailboat" y="-0.2" />
+
+    <!-- Add 3D LIDAR -->
+    <xacro:sailboat_3d_lidar name="lidar_sailboat" P="${radians(8)}" />
+  </xacro:if>
+
+</robot>
