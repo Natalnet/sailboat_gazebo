@@ -93,11 +93,12 @@
 	    </collision>
 
 	    <visual name="visual">
-            <geometry>
-              <box size="0.4 0.02 1" />
-            </geometry>
+          <geometry>
+            <mesh filename="package://sailboat_description/mesh/sail.stl"/>
+          </geometry>
             <origin rpy="0 0 0" xyz="0 0 0"/>
 	    </visual>
+
     </link>
 
     <joint name="sail_joint" type="revolute">
