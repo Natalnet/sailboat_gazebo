@@ -5,7 +5,7 @@ find_package(catkin REQUIRED COMPONENTS xacro)
 catkin_package(CATKIN_DEPENDS xacro)
 xacro_add_files(
   urdf/sailboat_base.urdf.xacro
-    INORDER INSTALL DESTINATION urdf
+    INORDER INSTALL DESTINATION urdf 
 )
 
 install(DIRECTORY mesh/
@@ -13,3 +13,9 @@ install(DIRECTORY mesh/
 
 install(DIRECTORY urdf/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/urdf)
+
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch)
+
+install(DIRECTORY rviz/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/rviz)

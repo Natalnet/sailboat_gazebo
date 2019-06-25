@@ -94,7 +94,7 @@
 
 	    <visual name="visual">
           <geometry>
-            <mesh filename="package://sailboat_description/mesh/sail.stl"/>
+            <mesh filename="package://sailboat_description/mesh/sail.dae"/>
           </geometry>
             <origin rpy="0 0 0" xyz="0 0 0"/>
 	    </visual>
