@@ -2,7 +2,7 @@
 <package format="2">
   <name>sailboat_description</name>
   <version>1.0.1</version>
-  <description>This package provides a URDF model of WAM-V</description>
+  <description>This package provides a URDF model of Nboat</description>
   <maintainer email="davihenriqueds@gmail.com">Davi Henrique</maintainer>
   <license>Apache 2.0</license>
   <url type="website">http://wiki.ros.org/wamv_description</url>
