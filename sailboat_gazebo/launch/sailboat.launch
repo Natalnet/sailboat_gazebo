@@ -24,11 +24,10 @@
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name"   value="$(arg world)"/>
     <arg name="verbose"      value="$(arg verbose)"/>
-    <arg name="paused"       value="false"/>
+    <arg name="paused"       value="true"/>
     <arg name="use_sim_time" value="true"/>
     <arg name="gui"          value="$(arg gui)" />
   </include>
-
 
   <arg name="urdf" default="$(find sailboat_gazebo)/urdf/sailboat_gazebo.urdf.xacro"/>
 
@@ -41,7 +40,8 @@
   args="-x $(arg x) -y $(arg y) -z $(arg z)
         -R $(arg R) -P $(arg P) -Y $(arg Y)
         -urdf -param robot_description -model sailboat"/>
-
+  
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
 
   <!--<param name="robot_description" command="$(find xacro)/xacro inorder $(find sailboat_gazebo)/urdf/sailboat_gazebo.xacro"/>
 

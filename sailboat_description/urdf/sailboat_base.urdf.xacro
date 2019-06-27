@@ -23,16 +23,9 @@
 
         <inertial>
           <origin rpy="0 0 0" xyz="0 0 -0.05"/>
-          <mass value="10"/>
+          <mass value="0.5"/>
           <inertia ixx="0.1" ixy="0.0" ixz="0.0" iyy="1.4" iyz="0.0" izz="1.4"/>
         </inertial>
-
-        <buoyancy>
-          <compensation>1.2</compensation>
-          <origin xyz="-0.0005 0 0.05"/>
-          <limit radius="0.1"/>
-          <damping rpy="20 50 50" xyz="20 50 50"/>
-        </buoyancy>
     </link>
 
     <!-- RUDDER DESCRIPTION -->
@@ -50,23 +43,23 @@
 
             <collision name="collision">
                 <geometry>
-                  <box size="0.1 0.02 0.3" />
+                  <mesh filename="package://sailboat_description/mesh/rudder.stl"/>
                 </geometry>
-                <origin rpy="0 0 0" xyz="-0.1 0 0"/>
+                <origin rpy="0 0 0" xyz="-0.2 0 0"/>
             </collision>
 
             <visual name="visual">
                 <geometry>
-                  <box size="0.1 0.02 0.3" />
+                  <mesh filename="package://sailboat_description/mesh/rudder.stl"/>
                 </geometry>
-                <origin rpy="0 0 0" xyz="-0.1 0 0"/>
+                <origin rpy="0 0 0" xyz="-0.2 0 0"/>
             </visual>
         </link>
 
         <joint name="rudder_joint" type="revolute">
             <parent link="base_link"/>
             <child link="rudder"/>
-            <origin rpy="0 0 0" xyz="-0.53 0 -0.1"/>
+            <origin rpy="0 0 0" xyz="-0.2 0 0.0"/>
             <dynamics damping="1.0"/>
             <axis xyz="0 0 1"/>
             <limit effort="50" velocity="5" lower="-${PI/3}" upper="${PI/3}" />
@@ -89,14 +82,14 @@
             <geometry>
               <mesh filename="package://sailboat_description/mesh/sail.dae"/>
             </geometry>
-            <origin rpy="0 0 0" xyz="0.4 0 0.6"/>
+            <origin rpy="0 0 0" xyz="0.05 0 0.0"/>
 	    </collision>
 
 	    <visual name="visual">
           <geometry>
             <mesh filename="package://sailboat_description/mesh/sail.dae"/>
           </geometry>
-            <origin rpy="0 0 0" xyz="0.4 0 0.6"/>
+            <origin rpy="0 0 0" xyz="0.05 0 0.0"/>
 	    </visual>
 
     </link>
@@ -104,7 +97,7 @@
     <joint name="sail_joint" type="revolute">
         <parent link="base_link"/>
         <child link="sail"/>
-        <origin rpy="0 0 0" xyz="0.4 0 0.6"/>
+        <origin rpy="0 0 0" xyz="0.05 0 0.0"/>
         <dynamics damping="1.0"/>
         <axis xyz="0 0 1"/>
         <limit effort="30" velocity="5" lower="-${PI/2}" upper="${PI/2}" />
@@ -127,7 +120,7 @@
             <geometry>
               <mesh filename="package://sailboat_description/mesh/keel.stl"/>
             </geometry>
-            <origin rpy="0 0 0" xyz="0 0 -0.5"/>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
         </collision>
 
         <visual name="visual">
@@ -141,7 +134,7 @@
     <joint name="keel_joint" type="revolute">
         <parent link="base_link"/>
         <child link="keel"/>
-        <origin rpy="0 0 0" xyz="-0.53 0 -0.1"/>
+        <origin rpy="0 0 0" xyz="0 0 0.0"/>
         <axis xyz="0 0 1"/>
         <limit effort="50" velocity="5" lower="0" upper="0" />
     </joint>
