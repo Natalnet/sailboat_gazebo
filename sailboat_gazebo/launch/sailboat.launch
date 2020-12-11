@@ -3,63 +3,57 @@
 
 <env name="ROSCONSOLE_CONFIG_FILE" value="$(find vrx_gazebo)/config/custom_rosconsole.conf"/>
   <!-- Gazebo world to load -->
-  <arg name="world" default="$(find vrx_gazebo)/worlds/example_course.world" />
+  <arg name="world" default="$(find vrx_gazebo)/worlds/sandisland.world" />
   <!-- If true, run gazebo GUI -->
   <arg name="gui" default="true" />
   <!-- If true, run gazebo in verbose mode -->
   <arg name="verbose" default="false"/>
+    <!-- If true, start in paused state -->
+  <arg name="paused"  default="false"/>
+    <!-- Set various other gazebo arguments-->
+  <arg name="extra_gazebo_args" default=""/>
+  <!-- Start in a default namespace -->
+  <arg name="namespace" default="sailboat"/>
 
   <!-- Initial USV location and attitude-->
-  <arg name="x" default="0" />
-  <arg name="y" default="0" />
+  <arg name="x" default="158" />
+  <arg name="y" default="108" />
   <arg name="z" default="0.1" />
   <arg name="P" default="0" />
   <arg name="R" default="0" />
-  <arg name="Y" default="0" />
+  <arg name="Y" default="-2.76" />
 
-  <!-- Do we load the VRX sensor suite? -->
-  <arg name="vrx_sensors_enabled" default="true" />
+  <!-- If true, show non-competition ROS topics (/gazebo/model_states, /vrx/debug/wind/direction, etc.)-->
+  <arg name="non_competition_mode" default="true"/>
+  <arg name="enable_ros_network" value="$(arg non_competition_mode)"/>
+  <env name="VRX_DEBUG" value="$(arg non_competition_mode)"/>
+  <env unless="$(arg non_competition_mode)" name="GAZEBO_MODEL_PATH" value="$(find vrx_gazebo)/models:$(find wamv_gazebo)/models:$(find wamv_description)/models:$(optenv GAZEBO_MODEL_PATH)"/>
 
   <!-- Start Gazebo with the world file -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name"   value="$(arg world)"/>
     <arg name="verbose"      value="$(arg verbose)"/>
-    <arg name="paused"       value="true"/>
+    <arg name="paused"       value="$(arg paused)"/>
     <arg name="use_sim_time" value="true"/>
     <arg name="gui"          value="$(arg gui)" />
+    <arg name="enable_ros_network" value="$(arg enable_ros_network)"/>
+    <arg name="extra_gazebo_args" value="$(arg extra_gazebo_args)"/>
   </include>
 
-  <arg name="urdf" default="$(find sailboat_gazebo)/urdf/sailboat_gazebo.urdf.xacro"/>
+    <!-- Load robot model -->
+    <arg name="urdf" default="$(find sailboat_gazebo)/urdf/sailboat_gazebo.urdf.xacro"/>
+    <param name="robot_description"
+           command="$(find xacro)/xacro &#x002D;&#x002D;inorder '$(arg urdf)'
+           namespace:=$(arg namespace) "/>
 
-  <param name="robot_description"
-         command="$(find xacro)/xacro &#x002D;&#x002D;inorder '$(arg urdf)'
-         vrx_sensors_enabled:=$(arg vrx_sensors_enabled) "/>
-
-           <!-- Spawn model in Gazebo -->
-  <node name="spawn_model" pkg="gazebo_ros" type="spawn_model"
-  args="-x $(arg x) -y $(arg y) -z $(arg z)
-        -R $(arg R) -P $(arg P) -Y $(arg Y)
-        -urdf -param robot_description -model sailboat"/>
-  
-  <!--node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/-->
-
-  <!--node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf">
-    <param name="output_frame" value="odom"/>
-    <param name="freq" value="30.0"/>
-    <param name="sensor_timeout" value="1.0"/>
-    <param name="odom_used" value="true"/>
-    <param name="imu_used" value="true"/>
-    <param name="vo_used" value="true"/>
-    <param name="debug" value="false"/>
-    <param name="self_diagnose" value="false"/>
-  </node-->
+  <!-- Spawn model in Gazebo, script depending on non_competition_mode -->
+  <node name="spawn_model" pkg="gazebo_ros" type="spawn_model" if="$(arg non_competition_mode)"
+        args="-x $(arg x) -y $(arg y) -z $(arg z)
+              -R $(arg R) -P $(arg P) -Y $(arg Y)
+              -urdf -param robot_description -model sailboat"/>
 
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
 
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
-
-  <!--<param name="robot_description" command="$(find xacro)/xacro inorder $(find sailboat_gazebo)/urdf/sailboat_gazebo.xacro"/>
-
-  <node name="spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen" args="-urdf -model sailboat -param robot_description -x 0 -y 0 -z 0 -R 0 -P 0 -Y 0"/>-->
 
 </launch>

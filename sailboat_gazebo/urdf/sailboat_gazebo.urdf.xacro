@@ -10,7 +10,7 @@
   <xacro:arg name="ground_truth_enabled" default="false" />
   <xacro:arg name="vrx_sensors_enabled" default="false" />
 
-  <!-- === The WAM-V platform === -->
+  <!-- === The sailboat platform === -->
   <xacro:include filename="$(find sailboat_gazebo)/urdf/sailboat_gazebo.xacro" />
 
   <!-- Add a front camera -->
