@@ -45,21 +45,21 @@
                 <geometry>
                   <mesh filename="package://sailboat_description/mesh/rudder.stl"/>
                 </geometry>
-                <origin rpy="0 0 0" xyz="-0.2 0 0"/>
+                <origin rpy="0 0 0" xyz="0.0 0 0"/>
             </collision>
 
             <visual name="visual">
                 <geometry>
                   <mesh filename="package://sailboat_description/mesh/rudder.stl"/>
                 </geometry>
-                <origin rpy="0 0 0" xyz="-0.2 0 0"/>
+                <origin rpy="0 0 0" xyz="0.0 0 0"/>
             </visual>
         </link>
 
         <joint name="rudder_joint" type="revolute">
             <parent link="base_link"/>
             <child link="rudder"/>
-            <origin rpy="0 0 0" xyz="-0.2 0 0.0"/>
+            <origin rpy="0 0 0" xyz="-0.4 0 0.0"/>
             <dynamics damping="1.0"/>
             <axis xyz="0 0 1"/>
             <limit effort="50" velocity="5" lower="-${PI/3}" upper="${PI/3}" />
@@ -82,14 +82,14 @@
             <geometry>
               <mesh filename="package://sailboat_description/mesh/sail.dae"/>
             </geometry>
-            <origin rpy="0 0 0" xyz="0.05 0 0.0"/>
+            <origin rpy="0 0 0" xyz="0.0 0 0.0"/>
 	    </collision>
 
 	    <visual name="visual">
           <geometry>
             <mesh filename="package://sailboat_description/mesh/sail.dae"/>
           </geometry>
-            <origin rpy="0 0 0" xyz="0.05 0 0.0"/>
+            <origin rpy="0 0 0" xyz="0.0 0 0.0"/>
 	    </visual>
 
     </link>
@@ -97,46 +97,38 @@
     <joint name="sail_joint" type="revolute">
         <parent link="base_link"/>
         <child link="sail"/>
-        <origin rpy="0 0 0" xyz="0.05 0 0.0"/>
+        <origin rpy="0 0 0" xyz="0.25 0 0.0"/>
         <dynamics damping="1.0"/>
         <axis xyz="0 0 1"/>
         <limit effort="30" velocity="5" lower="-${PI/2}" upper="${PI/2}" />
     </joint>
 
-    <!-- KEEL DESCRIPTION -->
-    <link name="keel">
-        <inertial>
-            <mass value="0.05" />
-            <inertia
-              ixx="0.05"
-              ixy="0.0"
-              iyy="0.05"
-              ixz="0.0"
-              iyz="0.0"
-              izz="0.005"/>
-        </inertial>
 
-        <collision name="collision">
-            <geometry>
-              <mesh filename="package://sailboat_description/mesh/keel.stl"/>
-            </geometry>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
-        </collision>
 
-        <visual name="visual">
-            <geometry>
-              <mesh filename="package://sailboat_description/mesh/keel.stl"/>
-            </geometry>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
-        </visual>
-    </link>
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>/sailboat</robotNamespace>
+    </plugin>
+  </gazebo>
 
-    <joint name="keel_joint" type="revolute">
-        <parent link="base_link"/>
-        <child link="keel"/>
-        <origin rpy="0 0 0" xyz="0 0 0.0"/>
-        <axis xyz="0 0 1"/>
-        <limit effort="50" velocity="5" lower="0" upper="0" />
+  <transmission name="sail_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <actuator name="sail_act">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+    <joint name="sail_joint">
+      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
     </joint>
+  </transmission>
+
+  <transmission name="rudder_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <actuator name="rudder_act">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+    <joint name="rudder_joint">
+      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+    </joint>
+  </transmission>
 
 </robot>
