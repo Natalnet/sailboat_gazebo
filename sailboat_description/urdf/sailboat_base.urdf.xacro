@@ -3,11 +3,12 @@
 <robot name="sailboat" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
     <xacro:property name="PI" value="3.1415926535897931"/>
+    <xacro:property name="disp" value="0.0"/>
 
     <!-- HULL DESCRIPTION -->
     <link name="base_link">
         <visual>
-          <origin rpy="0 0 0"/>
+          <origin rpy="0 0 0" xyz="0 0 ${disp}"/>
           <geometry>
             <mesh filename="package://sailboat_description/mesh/pt90.stl"/>
           </geometry>
@@ -15,30 +16,30 @@
         </visual>
 
         <collision>
-          <origin rpy="0 0 0"/>
+          <origin rpy="0 0 0" xyz="0 0 ${disp}"/>
           <geometry>
             <mesh filename="package://sailboat_description/mesh/pt90.stl"/>
           </geometry>
         </collision>
 
         <inertial>
-          <origin rpy="0 0 0" xyz="0 0 -0.05"/>
-          <mass value="0.5"/>
-          <inertia ixx="0.1" ixy="0.0" ixz="0.0" iyy="1.4" iyz="0.0" izz="1.4"/>
+          <origin rpy="0 0 0" xyz="0 0 ${disp}"/>
+          <mass value="50.0"/>
+          <inertia ixx="0.3" ixy="0.0" ixz="0.0" iyy="3.5" iyz="0.0" izz="3.6"/>
         </inertial>
     </link>
 
     <!-- RUDDER DESCRIPTION -->
     <link name="rudder">
             <inertial>
-                <mass value="0.05" />
+                <mass value="1.0" />
                 <inertia
-                  ixx="0.05"
+                  ixx="0.0"
                   ixy="0.0"
-                  iyy="0.05"
+                  iyy="0.0"
                   ixz="0.0"
                   iyz="0.0"
-                  izz="0.005"/>
+                  izz="0.0"/>
             </inertial>
 
             <collision name="collision">
@@ -59,7 +60,7 @@
         <joint name="rudder_joint" type="revolute">
             <parent link="base_link"/>
             <child link="rudder"/>
-            <origin rpy="0 0 0" xyz="-0.4 0 0.0"/>
+            <origin rpy="0 0 0" xyz="-0.4 0 0"/>
             <dynamics damping="1.0"/>
             <axis xyz="0 0 1"/>
             <limit effort="50" velocity="5" lower="-${PI/3}" upper="${PI/3}" />
@@ -68,14 +69,14 @@
     <!-- SAIL DESCRIPTION -->
     <link name="sail">
 		<inertial>
-			<mass value="0.1" />
+			<mass value="2.0" />
 			<inertia
-			  ixx="0.4708"
+			  ixx="0.0"
 			  ixy="0.0"
-			  iyy="0.5208"
+			  iyy="0.0"
 			  ixz="0.0"
 			  iyz="0.0"
-			  izz="0.0508"/>
+			  izz="0.0"/>
 		</inertial>
 
 	    <collision name="collision">
@@ -97,18 +98,106 @@
     <joint name="sail_joint" type="revolute">
         <parent link="base_link"/>
         <child link="sail"/>
-        <origin rpy="0 0 0" xyz="0.25 0 0.0"/>
+        <origin rpy="0 0 0" xyz="0.25 0 0"/>
         <dynamics damping="1.0"/>
         <axis xyz="0 0 1"/>
         <limit effort="30" velocity="5" lower="-${PI/2}" upper="${PI/2}" />
     </joint>
 
 
+<!-- KEEL DESCRIPTION -->	
+    <link name="keel">	
+        <inertial>	
+            <mass value="10.0" xyz="0 0 0" />	
+            <inertia	
+              ixx="0.05"	
+              ixy="0.0"	
+              iyy="0.05"	
+              ixz="0.0"	
+              iyz="0.0"	
+              izz="0.005"/>	
+        </inertial>	
+
+        <collision name="collision">	
+            <geometry>	
+              <mesh filename="package://sailboat_description/mesh/keel.stl"/>	
+            </geometry>	
+            <origin rpy="0 0 0" xyz="0 0 0"/>	
+        </collision>
+
+        <visual name="visual">
+            <geometry>
+              <mesh filename="package://sailboat_description/mesh/keel.stl"/>
+            </geometry>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+        </visual>	
+    </link>
+
+     <joint name="keel_joint" type="revolute">
+        <parent link="base_link"/>
+        <child link="keel"/>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <axis xyz="0 0 1"/>
+        <limit effort="50" velocity="0" lower="0" upper="0" />
+ 	</joint>
 
   <gazebo>
     <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
       <robotNamespace>/sailboat</robotNamespace>
     </plugin>
+
+	<plugin name="lifting_surface" filename="libLiftDragPlugin.so">
+
+    <!-- taken from the lift curve figure -->
+    <!-- alpha_0 is 5 degrees -->
+    <a0>0.08727</a0>
+    <!-- alpha_stall is 19.3 degrees -->
+    <alpha_stall>0.3368</alpha_stall>
+    <!-- slope of the lift curve to the left of the stall angle -->
+    <cla>5.418</cla>
+    <!-- slope of the lift curve to the right of the stall angle -->
+    <cla_stall>-2.1419</cla_stall>
+
+    <!-- below are just random values in this example -->
+    <cda>0.0</cda>
+    <cda_stall>0.0</cda_stall>
+    <cma>0.0</cma>
+    <cma_stall>0.0</cma_stall>
+    <area>3</area>
+    <fluid_density>1.2041</fluid_density>
+    <forward>-1 0 0</forward>
+    <upward>0 -1 0</upward>
+    <cp>0 0 1</cp>
+    <link_name>sail</link_name>
+    <radial_symmetry>false</radial_symmetry>
+  </plugin>
+
+  <plugin name="lifting_surface" filename="libLiftDragPlugin.so">
+
+        <!-- taken from the lift curve figure -->
+        <!-- alpha_0 is 5 degrees -->
+        <a0>0.08727</a0>
+        <!-- alpha_stall is 19.3 degrees -->
+        <alpha_stall>0.3368</alpha_stall>
+        <!-- slope of the lift curve to the left of the stall angle -->
+        <cla>5.418</cla>
+        <!-- slope of the lift curve to the right of the stall angle -->
+        <cla_stall>-2.1419</cla_stall>
+
+        <!-- below are just random values in this example -->
+        <cda>0.0</cda>
+        <cda_stall>0.0</cda_stall>
+        <cma>0.0</cma>
+        <cma_stall>0.0</cma_stall>
+        <area>3</area>
+        <fluid_density>1.2041</fluid_density>
+        <forward>-1 0 0</forward>
+        <upward>0 -1 0</upward>
+        <cp>0 0 1</cp>
+        <link_name>rudder</link_name>
+        <radial_symmetry>false</radial_symmetry>
+      </plugin>
+
   </gazebo>
 
   <transmission name="sail_trans">
