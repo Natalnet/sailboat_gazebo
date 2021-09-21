@@ -17,14 +17,15 @@
         <xUU>72.4</xUU>
         <yV>40.0</yV>
         <yVV>0.0</yVV>
-        <zW>500.0</zW>
+        <zW>2000.0</zW>
+        <zWW>500.0</zWW>
         <kP>50.0</kP>
         <mQ>50.0</mQ>
         <nR>400.0</nR>
         <nRR>0.0</nRR>
         <!-- General dimensions -->
         <!--<boatArea>2.2</boatArea>-->
-        <hullRadius>0.213</hullRadius>
+        <hullRadius>1.0</hullRadius>
         <boatWidth>${width}</boatWidth>
         <boatLength>${length}</boatLength>
         <!-- Length discretization, AKA, "N" -->

@@ -5,29 +5,38 @@ find_package(catkin REQUIRED COMPONENTS
   sailboat_description
   usv_gazebo_plugins
   xacro
+  gazebo_ros
+  gazebo_plugins
 )
+
+find_package(gazebo REQUIRED)
+
 catkin_package(
   CATKIN_DEPENDS sailboat_description usv_gazebo_plugins xacro 
 )
 
-# Generate urdf files from xacro and install
+link_directories(${GAZEBO_LIBRARY_DIRS})
+include_directories(
+ include
+  ${catkin_INCLUDE_DIRS}  ${GAZEBO_INCLUDE_DIRS} 
+)
+
 xacro_add_files(
   urdf/sailboat_gazebo.urdf.xacro
   INORDER INSTALL DESTINATION urdf
 )
 
-# Install meshes and textures
 install(DIRECTORY models/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/models)
 
-# Install xacro files / macros
 install(DIRECTORY urdf/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/urdf)
 
-# Install config files
 install(DIRECTORY config/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/config)
 
-# Install launch files
 install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch)
+
+add_library(sailboat_gazebo src/LiftDragPluginNboat.cc)
+target_link_libraries(sailboat_gazebo ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})

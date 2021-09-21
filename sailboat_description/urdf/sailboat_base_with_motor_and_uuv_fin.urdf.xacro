@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+
+<robot name="sailboat" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:arg name="thruster_namespace" default="thrusters/"/>
+
+    <xacro:property name="PI" value="3.1415926535897931"/>
+    <xacro:property name="disp" value="0.0"/>
+    <xacro:property name="thruster_namespace" value="$(arg thruster_namespace)" scope="global" />
+    
+    <!-- HULL DESCRIPTION -->
+    <link name="base_link">
+        <visual>
+          <origin rpy="0 0 0" xyz="0 0 ${disp}"/>
+          <geometry>
+            <mesh filename="package://sailboat_description/mesh/pt90.stl"/>
+          </geometry>
+          <material name="blue"/>
+        </visual>
+
+        <collision>
+          <origin rpy="0 0 ${disp}"/>
+          <geometry>
+            <mesh filename="package://sailboat_description/mesh/pt90.stl"/>
+          </geometry>
+        </collision>
+
+        <inertial>
+          <origin rpy="0 0 0" xyz="0 0 0.0"/>
+          <mass value="50.0"/>
+          <inertia ixx="0.3" ixy="0.0" ixz="0.0" iyy="3.5" iyz="0.0" izz="3.6"/>
+        </inertial>
+    </link>
+
+  <xacro:include filename="$(find uuv_descriptions)/urdf/common.urdf.xacro" />
+  <xacro:include filename="$(find uuv_gazebo_ros_plugins)/urdf/fin_snippets.xacro" />
+  
+  <xacro:fin_two_lines_macro 
+    namespace="sailboat" 
+    parent_link="base_link" 
+    fin_id="0" 
+    min_joint_limit="${PI/3}" 
+    max_joint_limit="${PI/3}" 
+    mesh_filename="package://sailboat_description/mesh/rudder.stl"
+    fin_dynamics_time_constant=""
+    fin_cross_section_area=""
+    fluid_density=""
+    a0=""
+    alpha_stall=""
+    cla=""
+    cla_stall=""
+    cda=""
+    cda_stall=""
+    current_velocity_topic=""
+    >
+    <origin xyz="-0.3 0 0" rpy="0 0 0" />
+  </xacro:fin_two_lines_macro>
+
+  <xacro:include filename="$(find wamv_description)/urdf/thrusters/engine.xacro" />
+  <xacro:engine prefix="center" position="-0.5 0 ${disp}" />
+
+  <gazebo>
+
+  <plugin name="wamv_gazebo_thrust" filename="libusv_gazebo_thrust_plugin.so">
+    <cmdTimeout>1.0</cmdTimeout>
+    <robotNamespace>sailboat</robotNamespace>
+    <xacro:include filename="$(find wamv_gazebo)/urdf/thruster_layouts/wamv_gazebo_thruster_config.xacro" />
+    <xacro:wamv_gazebo_thruster_config name="center" />
+  </plugin>
+
+  </gazebo>
+
+</robot>

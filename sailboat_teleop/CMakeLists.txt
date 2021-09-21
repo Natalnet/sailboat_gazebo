@@ -18,7 +18,8 @@ catkin_package(
     DEPENDS
 )
 
-add_executable(sailboat_teleop src/sailboat_teleop.cpp)
+add_executable(sailboat_teleop src/sailboatmotor_teleop.cpp)
+
 target_link_libraries(sailboat_teleop ${catkin_LIBRARIES})
 add_dependencies(sailboat_teleop std_msgs ${catkin_EXPORTED_TARGETS})
 

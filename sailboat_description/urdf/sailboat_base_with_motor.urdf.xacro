@@ -1,0 +1,204 @@
+<?xml version="1.0"?>
+
+<robot name="sailboat" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:arg name="thruster_namespace" default="thrusters/"/>
+
+    <xacro:property name="PI" value="3.1415926535897931"/>
+    <xacro:property name="disp" value="0.0"/>
+    <xacro:property name="thruster_namespace" value="$(arg thruster_namespace)" scope="global" />
+
+
+    
+    <!-- HULL DESCRIPTION -->
+    <link name="base_link">
+        <visual>
+          <origin rpy="0 0 0" xyz="0 0 ${disp}"/>
+          <geometry>
+            <mesh filename="package://sailboat_description/mesh/pt90.stl"/>
+          </geometry>
+          <material name="blue"/>
+        </visual>
+
+        <collision>
+          <origin rpy="0 0 ${disp}"/>
+          <geometry>
+            <mesh filename="package://sailboat_description/mesh/pt90.stl"/>
+          </geometry>
+        </collision>
+
+        <inertial>
+          <origin rpy="0 0 0" xyz="0 0 0.0"/>
+          <mass value="50.0"/>
+          <inertia ixx="0.3" ixy="0.0" ixz="0.0" iyy="3.5" iyz="0.0" izz="3.6"/>
+        </inertial>
+    </link>
+
+    <!-- RUDDER DESCRIPTION -->
+    <link name="rudder">
+            <inertial>
+                <mass value="1.0" />
+                <inertia
+                  ixx="0.0"
+                  ixy="0.0"
+                  iyy="0.0"
+                  ixz="0.0"
+                  iyz="0.0"
+                  izz="0.0"/>
+            </inertial>
+
+            <collision name="collision">
+                <geometry>
+                  <mesh filename="package://sailboat_description/mesh/rudder.stl"/>
+                </geometry>
+                <origin rpy="0 0 0" xyz="0.0 0 0"/>
+            </collision>
+
+            <visual name="visual">
+                <geometry>
+                  <mesh filename="package://sailboat_description/mesh/rudder.stl"/>
+                </geometry>
+                <origin rpy="0 0 0" xyz="0.0 0 0"/>
+            </visual>
+        </link>
+
+        <joint name="rudder_joint" type="revolute">
+            <parent link="base_link"/>
+            <child link="rudder"/>
+            <origin rpy="0 0 0" xyz="-0.4 0 ${disp}"/>
+            <dynamics damping="1.0"/>
+            <axis xyz="0 0 1"/>
+            <limit effort="50" velocity="5" lower="-${PI/3}" upper="${PI/3}" />
+        </joint>
+
+    <!-- SAIL DESCRIPTION -->
+    <link name="sail">
+		<inertial>
+			<mass value="2.0" />
+			<inertia
+			  ixx="0.0"
+			  ixy="0.0"
+			  iyy="0.0"
+			  ixz="0.0"
+			  iyz="0.0"
+			  izz="0.0"/>
+		</inertial>
+
+	    <collision name="collision">
+            <geometry>
+              <mesh filename="package://sailboat_description/mesh/sail.dae"/>
+            </geometry>
+            <origin rpy="0 0 0" xyz="0.0 0 0.0"/>
+	    </collision>
+
+	    <visual name="visual">
+          <geometry>
+            <mesh filename="package://sailboat_description/mesh/sail.dae"/>
+          </geometry>
+            <origin rpy="0 0 0" xyz="0.0 0 0.0"/>
+	    </visual>
+
+    </link>
+
+    <joint name="sail_joint" type="revolute">
+        <parent link="base_link"/>
+        <child link="sail"/>
+        <origin rpy="0 0 0" xyz="0.25 0 ${disp}"/>
+        <dynamics damping="1.0"/>
+        <axis xyz="0 0 1"/>
+        <limit effort="30" velocity="5" lower="-${PI/2}" upper="${PI/2}" />
+    </joint>
+
+
+<!-- KEEL DESCRIPTION -->	
+    <link name="keel">	
+        <inertial>	
+            <mass value="10.0" xyz="0 0 ${disp}" />	
+            <inertia	
+              ixx="0.05"	
+              ixy="0.0"	
+              iyy="0.05"	
+              ixz="0.0"	
+              iyz="0.0"	
+              izz="0.005"/>	
+        </inertial>	
+
+        <collision name="collision">	
+            <geometry>	
+              <mesh filename="package://sailboat_description/mesh/keel.stl"/>	
+            </geometry>	
+            <origin rpy="0 0 0" xyz="0 0 0"/>	
+        </collision>
+
+        <visual name="visual">
+            <geometry>
+              <mesh filename="package://sailboat_description/mesh/keel.stl"/>
+            </geometry>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+        </visual>	
+    </link>
+
+     <joint name="keel_joint" type="revolute">
+        <parent link="base_link"/>
+        <child link="keel"/>
+        <origin rpy="0 0 0" xyz="0 0 ${disp}"/>
+        <axis xyz="0 0 1"/>
+        <limit effort="50" velocity="0" lower="0" upper="0" />
+ 	</joint>
+
+  <xacro:include filename="$(find wamv_description)/urdf/thrusters/engine.xacro" />
+  <xacro:engine prefix="center" position="-0.5 0 ${disp}" />
+
+  <gazebo>
+
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>/sailboat</robotNamespace>
+    </plugin>
+
+    <plugin name="rudder" filename="libsailboat_gazebo.so">
+        <a0>0</a0>
+        <cla>0.8</cla>
+        <cda>0.3</cda>
+        <cma>-1.8</cma>
+        <alpha_stall>0.3391428111</alpha_stall>
+        <cla_stall>-0.85</cla_stall>
+        <cda_stall>-0.3233984055</cda_stall>
+        <cma_stall>0</cma_stall>
+        <cp>0 0 0</cp>
+        <area>1.5329</area>
+        <air_density>1000</air_density>
+        <forward>1 0 0</forward>
+        <upward>0 1 0</upward>
+        <link_name>rudder</link_name>
+    </plugin>
+
+  <plugin name="wamv_gazebo_thrust" filename="libusv_gazebo_thrust_plugin.so">
+    <cmdTimeout>1.0</cmdTimeout>
+    <robotNamespace>sailboat</robotNamespace>
+    <xacro:include filename="$(find wamv_gazebo)/urdf/thruster_layouts/wamv_gazebo_thruster_config.xacro" />
+    <xacro:wamv_gazebo_thruster_config name="center" />
+  </plugin>
+
+  </gazebo>
+
+  <transmission name="sail_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <actuator name="sail_act">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+    <joint name="sail_joint">
+      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+    </joint>
+  </transmission>
+
+  <transmission name="rudder_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <actuator name="rudder_act">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+    <joint name="rudder_joint">
+      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+    </joint>
+  </transmission>
+
+</robot>
