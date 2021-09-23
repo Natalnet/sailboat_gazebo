@@ -157,18 +157,18 @@
 
     <plugin name="rudder" filename="libsailboat_gazebo.so">
         <a0>0</a0>
-        <cla>0.8</cla>
-        <cda>0.3</cda>
-        <cma>-1.8</cma>
-        <alpha_stall>0.3391428111</alpha_stall>
-        <cla_stall>-0.85</cla_stall>
-        <cda_stall>-0.3233984055</cda_stall>
-        <cma_stall>0</cma_stall>
-        <cp>0 0 0</cp>
-        <area>1.5329</area>
+        <alpha_stall>1.5707963268</alpha_stall>
+
+        <cla>0.12</cla>
+
+        <cda>0.01</cda>
+
+        <cp>-3.0 0 -0.5</cp>
+        <area>2.0</area>
         <air_density>1000</air_density>
+
         <forward>1 0 0</forward>
-        <upward>0 1 0</upward>
+        <upward>0 -1 0</upward>
         <link_name>rudder</link_name>
     </plugin>
 

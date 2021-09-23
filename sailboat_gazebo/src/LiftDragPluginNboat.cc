@@ -364,31 +364,31 @@ void LiftDragPluginNboat::OnUpdate()
   //     (vel.Length() > 50.0 &&
   //      vel.Length() < 50.0))
 
-  if (ros::Time::now() > (begin + ros::Duration(1.0)))
+  if (ros::Time::now() > (begin + ros::Duration(0.2)))
   {
-    gzdbg << "=============================\n";
-    gzdbg << "sensor: [" << this->GetHandle() << "]\n";
-    gzdbg << "Link: [" << this->link->GetName()
+    std::cerr << "=============================\n";
+    std::cerr << "sensor: [" << this->GetHandle() << "]\n";
+    std::cerr << "Link: [" << this->link->GetName()
           << "] pose: [" << pose
           << "] dynamic pressure: [" << q << "]\n";
-    gzdbg << "spd: [" << vel.Length()
+    std::cerr << "spd: [" << vel.Length()
           << "] vel: [" << vel << "]\n";
-    gzdbg << "LD plane spd: [" << velInLDPlane.Length()
+    std::cerr << "LD plane spd: [" << velInLDPlane.Length()
           << "] vel : [" << velInLDPlane << "]\n";
-    gzdbg << "forward (inertial): " << forwardI << "\n";
-    gzdbg << "upward (inertial): " << upwardI << "\n";
-    gzdbg << "lift dir (inertial): " << liftI << "\n";
-    gzdbg << "Span direction (normal to LD plane): " << spanwiseI << "\n";
-    gzdbg << "sweep: " << this->sweep << "\n";
-    gzdbg << "alpha: " << this->alpha << "\n";
-    gzdbg << "lift: " << lift << "\n";
-    gzdbg << "drag: " << drag << " cd: "
+    std::cerr << "forward (inertial): " << forwardI << "\n";
+    std::cerr << "upward (inertial): " << upwardI << "\n";
+    std::cerr << "lift dir (inertial): " << liftI << "\n";
+    std::cerr << "Span direction (normal to LD plane): " << spanwiseI << "\n";
+    std::cerr << "sweep: " << this->sweep << "\n";
+    std::cerr << "alpha: " << this->alpha << "\n";
+    std::cerr << "lift: " << lift << "\n";
+    std::cerr << "drag: " << drag << " cd: "
           << cd << " cda: " << this->cda << "\n";
-    gzdbg << "moment: " << moment << "\n";
-    gzdbg << "cp momentArm: " << momentArm << "\n";
-    gzdbg << "force: " << force << "\n";
-    gzdbg << "torque: " << torque << "\n";
-    gzdbg << "\033c";
+    std::cerr << "moment: " << moment << "\n";
+    std::cerr << "cp momentArm: " << momentArm << "\n";
+    std::cerr << "force: " << force << "\n";
+    std::cerr << "torque: " << torque << "\n";
+    //std::cerr << "\033c";
     begin = ros::Time::now();
   }
 
@@ -401,5 +401,5 @@ void LiftDragPluginNboat::OnUpdate()
   this->link->AddForceAtRelativePosition(force, this->cp);
   this->link->AddTorque(torque);
 
-  //std::cerr<<"\n fAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+  // std::cerr<<"\n fAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 }

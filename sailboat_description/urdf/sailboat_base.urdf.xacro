@@ -146,7 +146,7 @@
       <robotNamespace>/sailboat</robotNamespace>
     </plugin>
 
-	<plugin name="lifting_surface" filename="libLiftDragPlugin.so">
+	<plugin name="lifting_surface1" filename="libLiftDragPlugin.so">
 
     <!-- taken from the lift curve figure -->
     <!-- alpha_0 is 5 degrees -->
@@ -172,7 +172,7 @@
     <radial_symmetry>false</radial_symmetry>
   </plugin>
 
-  <plugin name="lifting_surface" filename="libLiftDragPlugin.so">
+  <plugin name="lifting_surface2" filename="libLiftDragPlugin.so">
 
         <!-- taken from the lift curve figure -->
         <!-- alpha_0 is 5 degrees -->

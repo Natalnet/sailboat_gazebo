@@ -1,0 +1,24 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "",
+        "limitSymbolsToIncludedHeaders": true
+      },
+      "includePath": [
+        "/home/davi/nboat_ws/devel/include/**",
+        "/home/davi/vrx_ws/devel/include/**",
+        "/opt/ros/melodic/include/**",
+        "/home/davi/nboat_ws/src/sailboat_gazebo/sailboat_gazebo/include/**",
+        "/home/davi/vrx_ws/src/vrx/usv_gazebo_plugins/include/**",
+        "/home/davi/nboat_ws/src/sailboat_gazebo/uuv_gazebo_plugins/uuv_gazebo_plugins/include/**",
+        "/home/davi/nboat_ws/src/sailboat_gazebo/uuv_gazebo_plugins/uuv_gazebo_ros_plugins/include/**",
+        "/home/davi/vrx_ws/src/vrx/vrx_gazebo/include/**",
+        "/home/davi/vrx_ws/src/vrx/wave_gazebo_plugins/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS"
+    }
+  ],
+  "version": 4
+}
