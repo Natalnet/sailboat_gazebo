@@ -155,7 +155,24 @@
       <robotNamespace>/sailboat</robotNamespace>
     </plugin>
 
-    <plugin name="rudder" filename="libsailboat_gazebo.so">
+    <!-- <plugin name="rudder" filename="libsailboat_gazebo.so">
+        <a0>0</a0>
+        <alpha_stall>1.5707963268</alpha_stall>
+
+        <cla>0.12</cla>
+
+        <cda>0.01</cda>
+
+        <cp>-3.0 0 -0.5</cp>
+        <area>2.0</area>
+        <air_density>1000</air_density>
+
+        <forward>1 0 0</forward>
+        <upward>0 -1 0</upward>
+        <link_name>rudder</link_name>
+    </plugin> -->
+
+    <plugin name="sail" filename="libsailboat_gazebo_sail.so">
         <a0>0</a0>
         <alpha_stall>1.5707963268</alpha_stall>
 
@@ -171,6 +188,7 @@
         <upward>0 -1 0</upward>
         <link_name>rudder</link_name>
     </plugin>
+    
 
   <plugin name="wamv_gazebo_thrust" filename="libusv_gazebo_thrust_plugin.so">
     <cmdTimeout>1.0</cmdTimeout>

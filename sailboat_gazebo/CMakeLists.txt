@@ -39,4 +39,5 @@ install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch)
 
 add_library(sailboat_gazebo src/LiftDragPluginNboat.cc)
+add_library(sailboat_gazebo_sail src/LiftDragPluginNboatSail.cc)
 target_link_libraries(sailboat_gazebo ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
