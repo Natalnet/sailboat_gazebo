@@ -181,6 +181,15 @@ void LiftDragPluginNboatSail::Load(physics::ModelPtr _model,
         ros::VoidPtr(), &this->rosQueue);
   this->rosSub = this->rosNode->subscribe(so);
 
+  // Create a named topic, and subscribe to it.
+  ros::SubscribeOptions sospeed =
+    ros::SubscribeOptions::create<std_msgs::Float64>(
+        "/vrx/debug/wind/speed",
+        1,
+        boost::bind(&LiftDragPluginNboatSail::OnRosMsgWindSpeed, this, _1),
+        ros::VoidPtr(), &this->rosQueue);
+  this->rosSubWindSpeed = this->rosNode->subscribe(sospeed);
+
   // Spin up the queue helper thread.
   this->rosQueueThread =
     std::thread(std::bind(&LiftDragPluginNboatSail::QueueThread, this));    
@@ -416,6 +425,7 @@ void LiftDragPluginNboatSail::OnUpdate()
     std::cerr << "force: " << force << "\n";
     std::cerr << "torque: " << torque << "\n";
     std::cerr << "Wind direction: " << this->wind_direction << "\n";
+    std::cerr << "Wind Speed: " << this->wind_speed << "\n";
     //std::cerr << "\033c";
     begin = ros::Time::now();
   }

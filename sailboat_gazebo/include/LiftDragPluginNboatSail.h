@@ -147,6 +147,9 @@ namespace gazebo
     /// \brief A ROS subscriber
     private: ros::Subscriber rosSub;
 
+    /// \brief A ROS subscriber
+    private: ros::Subscriber rosSubWindSpeed;
+
     /// \brief A ROS callbackqueue that helps process messages
     private: ros::CallbackQueue rosQueue;
 
@@ -156,10 +159,20 @@ namespace gazebo
     /// \brief A thread the keeps running the rosQueue
     protected: double wind_direction;
 
+    /// \brief A thread the keeps running the rosQueue
+    protected: double wind_speed;
+
     /// \brief Handle an incoming message from ROS
     public: void OnRosMsg(const std_msgs::Float64ConstPtr &_msg)
     {
       this->wind_direction = _msg->data;
+      //this->SetVelocity(_msg->data);
+    }
+
+    /// \brief Handle an incoming message from ROS
+    public: void OnRosMsgWindSpeed(const std_msgs::Float64ConstPtr &_msg)
+    {
+      this->wind_speed = _msg->data;
       //this->SetVelocity(_msg->data);
     }
 
