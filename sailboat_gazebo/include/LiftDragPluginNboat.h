@@ -137,5 +137,11 @@ namespace gazebo
     protected: sdf::ElementPtr sdf;
 
     protected: ros::Time begin = ros::Time::now();
+
+    /// \brief Wind velocity unit vector in Gazebo coordinates [m/s].
+    private: ignition::math::Vector3d windDirection;
+
+    /// \brief Wind velocity unit vector in Gazebo coordinates [m/s].
+    private: int verbose;
   };
 }

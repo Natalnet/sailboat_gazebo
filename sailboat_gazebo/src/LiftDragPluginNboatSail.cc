@@ -122,6 +122,9 @@ void LiftDragPluginNboatSail::Load(physics::ModelPtr _model,
   if (_sdf->HasElement("area"))
     this->area = _sdf->Get<double>("area");
 
+  if (_sdf->HasElement("verbose"))
+    this->verbose = _sdf->Get<int>("verbose");
+
   if (_sdf->HasElement("air_density"))
     this->rho = _sdf->Get<double>("air_density");
 
@@ -192,12 +195,37 @@ void LiftDragPluginNboatSail::Load(physics::ModelPtr _model,
 
   // Spin up the queue helper thread.
   this->rosQueueThread =
-    std::thread(std::bind(&LiftDragPluginNboatSail::QueueThread, this));    
+    std::thread(std::bind(&LiftDragPluginNboatSail::QueueThread, this));
 }
 
 /////////////////////////////////////////////////
 void LiftDragPluginNboatSail::OnUpdate()
 {
+
+  // get wind direction in world
+  this->windDirection.X(cos(this->wind_direction * M_PI / 180));
+  this->windDirection.Y(sin(this->wind_direction * M_PI / 180));
+  this->windDirection.Z(0);
+
+  // Transform wind from world coordinates to body coordinates
+  #if GAZEBO_MAJOR_VERSION >= 8
+      ignition::math::Vector3d relativeWind =
+        this->link->WorldPose().Rot().Inverse().RotateVector(
+          this->windDirection*this->wind_speed);
+  #else
+        ignition::math::Vector3d relativeWind =
+          this->link->GetWorldPose().rot.Ign().Inverse().RotateVector(
+          this->windDirection*velocity);
+  #endif
+      // Calculate apparent wind
+  #if GAZEBO_MAJOR_VERSION >= 8
+      ignition::math::Vector3d apparentWind =
+        relativeWind - this->link->RelativeLinearVel();
+  #else
+      ignition::math::Vector3d apparentWind = relativeWind
+        - this->link->GetRelativeLinearVel().Ign();
+  #endif
+
   GZ_ASSERT(this->link, "Link was NULL");
   // get linear velocity at cp in inertial frame
   ignition::math::Vector3d vel = this->link->WorldLinearVel(this->cp);
@@ -400,7 +428,7 @@ void LiftDragPluginNboatSail::OnUpdate()
   //     (vel.Length() > 50.0 &&
   //      vel.Length() < 50.0))
 
-  if (ros::Time::now() > (begin + ros::Duration(0.2)))
+  if (ros::Time::now() > (begin + ros::Duration(0.2)) & verbose)
   {
     std::cerr << "=============================\n";
     std::cerr << "sensor: [" << this->GetHandle() << "]\n";
@@ -426,6 +454,9 @@ void LiftDragPluginNboatSail::OnUpdate()
     std::cerr << "torque: " << torque << "\n";
     std::cerr << "Wind direction: " << this->wind_direction << "\n";
     std::cerr << "Wind Speed: " << this->wind_speed << "\n";
+    std::cerr << "Wind vector: " << this->windDirection << "\n";
+    std::cerr << "Relative Wind: " << relativeWind << "\n";
+    std::cerr << "Apparent Wind: " << apparentWind << "\n";
     //std::cerr << "\033c";
     begin = ros::Time::now();
   }

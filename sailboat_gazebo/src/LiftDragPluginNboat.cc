@@ -122,6 +122,9 @@ void LiftDragPluginNboat::Load(physics::ModelPtr _model,
   if (_sdf->HasElement("area"))
     this->area = _sdf->Get<double>("area");
 
+  if (_sdf->HasElement("verbose"))
+    this->verbose = _sdf->Get<int>("verbose");
+
   if (_sdf->HasElement("air_density"))
     this->rho = _sdf->Get<double>("air_density");
 
@@ -364,7 +367,7 @@ void LiftDragPluginNboat::OnUpdate()
   //     (vel.Length() > 50.0 &&
   //      vel.Length() < 50.0))
 
-  if (ros::Time::now() > (begin + ros::Duration(0.2)))
+  if (ros::Time::now() > (begin + ros::Duration(0.2)) & verbose)
   {
     std::cerr << "=============================\n";
     std::cerr << "sensor: [" << this->GetHandle() << "]\n";

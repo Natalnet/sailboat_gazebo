@@ -188,5 +188,11 @@ namespace gazebo
       }
     }
 
+    /// \brief Wind velocity unit vector in Gazebo coordinates [m/s].
+    private: ignition::math::Vector3d windDirection;
+
+    /// \brief Wind velocity unit vector in Gazebo coordinates [m/s].
+    private: int verbose;
+
   };
 }
