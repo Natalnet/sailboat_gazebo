@@ -228,8 +228,10 @@ void LiftDragPluginNboatSail::OnUpdate()
 
   GZ_ASSERT(this->link, "Link was NULL");
   // get linear velocity at cp in inertial frame
-  ignition::math::Vector3d vel = this->link->WorldLinearVel(this->cp);
-  ignition::math::Vector3d velI = vel;
+  //ignition::math::Vector3d vel = this->link->WorldLinearVel(this->cp);
+  //ignition::math::Vector3d velI = vel;
+  ignition::math::Vector3d vel = apparentWind;
+  ignition::math::Vector3d velI = apparentWind;
   velI.Normalize();
 
   // smoothing
@@ -415,7 +417,7 @@ void LiftDragPluginNboatSail::OnUpdate()
 
   // force and torque about cg in inertial frame
   //ignition::math::Vector3d force = lift + drag;
-  ignition::math::Vector3d force = lift;
+  ignition::math::Vector3d force = lift + drag;
   // + moment.Cross(momentArm);
 
   ignition::math::Vector3d torque = moment;
