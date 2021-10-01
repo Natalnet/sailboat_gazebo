@@ -47,6 +47,7 @@ private:
   ros::Subscriber joy_subscriber_;
   ros::Publisher rudder_joint_publisher_;
   ros::Publisher sail_joint_publisher_;
+  ros::Publisher motor_joint_publisher_;
 
   struct Axis
   {
@@ -106,9 +107,9 @@ public:
     private_nh.param<int>("interrupt_button", buttons_.interrupt.button, 3);
     private_nh.param<double>("slow_factor", slow_factor_, 0.2);
 
-    private_nh.param<double>("pitch_max", axes_.x.factor, 30.0);
+    private_nh.param<double>("pitch_max", axes_.x.factor, 10.0);
     private_nh.param<double>("roll_max", axes_.y.factor, 60.0);
-    private_nh.param<double>("thrust_max", axes_.thrust.factor, 10.0);
+    private_nh.param<double>("thrust_max", axes_.thrust.factor, 90.0);
     private_nh.param<double>("thrust_offset", axes_.thrust.offset, 0.0);
 
     joy_subscriber_ = node_handle_.subscribe<sensor_msgs::Joy>("joy", 1,
@@ -117,7 +118,10 @@ public:
     rudder_joint_publisher_ = node_handle_.advertise<std_msgs::Float64>(
         "/sailboat/rudder_joint_position_controller/command", 10);
 
-    sail_joint_publisher_ = node_handle_.advertise<std_msgs::Float32>(
+    sail_joint_publisher_ = node_handle_.advertise<std_msgs::Float64>(
+        "/sailboat/sail_joint_position_controller/command", 10);
+
+    motor_joint_publisher_ = node_handle_.advertise<std_msgs::Float32>(
         "/sailboat/thrusters/center_thrust_cmd", 10);
   }
 
@@ -129,16 +133,18 @@ public:
   void joyAttitudeCallback(const sensor_msgs::JoyConstPtr &joy)
   {
     std_msgs::Float64 rudder_cmd;
-    std_msgs::Float32 sail_cmd;
+    std_msgs::Float64 sail_cmd;
+    std_msgs::Float32 motor_cmd;
     
     double rudder, sail;
 
     rudder_cmd.data = -getAxis(joy, axes_.y) * M_PI/180.0;
-    sail_cmd.data = getAxis(joy, axes_.thrust);
+    sail_cmd.data = getAxis(joy, axes_.thrust) * M_PI/180.0;
+    motor_cmd.data = getAxis(joy, axes_.x);
 
     rudder_joint_publisher_.publish(rudder_cmd);
-
     sail_joint_publisher_.publish(sail_cmd);
+    motor_joint_publisher_.publish(motor_cmd);
   }
 
   double getAxis(const sensor_msgs::JoyConstPtr &joy, const Axis &axis)
@@ -167,10 +173,11 @@ public:
 
   void stop()
   {
-    if (rudder_joint_publisher_.getNumSubscribers() > 0 || sail_joint_publisher_.getNumSubscribers() > 0 ) 
+    if (rudder_joint_publisher_.getNumSubscribers() > 0 || sail_joint_publisher_.getNumSubscribers() > 0 || motor_joint_publisher_.getNumSubscribers() > 0) 
     {
       rudder_joint_publisher_.publish(std_msgs::Float64());
-      sail_joint_publisher_.publish(std_msgs::Float32());
+      sail_joint_publisher_.publish(std_msgs::Float64());
+      motor_joint_publisher_.publish(std_msgs::Float32());
     }
   }
 };
