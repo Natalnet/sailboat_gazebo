@@ -127,6 +127,7 @@ namespace gazebo
 
     /// \brief Pointer to link currently targeted by mud joint.
     protected: physics::LinkPtr link;
+    protected: physics::JointPtr joint;
 
     /// \brief Pointer to a joint that actuates a control surface for
     /// this lifting body

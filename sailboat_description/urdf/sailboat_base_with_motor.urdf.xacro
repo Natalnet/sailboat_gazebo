@@ -179,13 +179,13 @@
 
         <cla>2.12</cla>
 
-        <cda>0.5</cda>
+        <cda>1.5</cda>
 
-        <cp>-1.5 0 2.0</cp>
-        <area>5.0</area>
-        <air_density>1.1839</air_density>
+        <cp>0.0 0 0.0</cp>
+        <area>1.0</area>
+        <air_density>1.2041</air_density>
 
-        <forward>1 0 0</forward>
+        <forward>-1 0 0</forward>
         <upward>0 1 0</upward>
         <link_name>sail</link_name>
         <verbose>1</verbose>

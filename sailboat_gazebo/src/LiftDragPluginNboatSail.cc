@@ -226,202 +226,311 @@ void LiftDragPluginNboatSail::OnUpdate()
         - this->link->GetRelativeLinearVel().Ign();
   #endif
 
-  GZ_ASSERT(this->link, "Link was NULL");
-  // get linear velocity at cp in inertial frame
-  //ignition::math::Vector3d vel = this->link->WorldLinearVel(this->cp);
-  //ignition::math::Vector3d velI = vel;
-  ignition::math::Vector3d vel = apparentWind;
-  ignition::math::Vector3d velI = apparentWind;
-  velI.Normalize();
+  //this->joint->SetLowStop(0, gazebo::math::Angle(-this->angle));
+	//this->joint->SetHighStop (0, gazebo::math::Angle (this->angle));
+	//ignition::math::Vector3d aw = this->wind - this->link->GetWorldLinearVel(this->cp);
+  ignition::math::Vector3d aw = apparentWind;
 
-  // smoothing
-  // double e = 0.8;
-  // this->velSmooth = e*vel + (1.0 - e)*velSmooth;
-  // vel = this->velSmooth;
+	if (aw.Length () <= 0.01)
+		return;
 
-  if (vel.Length() <= 0.01)
-    return;
-
-  // pose of body
   ignition::math::Pose3d pose = this->link->WorldPose();
 
-  // rotate forward and upward vectors into inertial frame
-  ignition::math::Vector3d forwardI = pose.Rot().RotateVector(this->forward);
+	// rotate forward and upward vectors into inertial frame
+	ignition::math::Vector3d forwardI = pose.Rot().RotateVector (this->forward); //xb
+	ignition::math::Vector3d upwardI = pose.Rot().RotateVector (this->upward);   //yb
 
-  ignition::math::Vector3d upwardI;
-  if (this->radialSymmetry)
-  {
-    // use inflow velocity to determine upward direction
-    // which is the component of inflow perpendicular to forward direction.
-    ignition::math::Vector3d tmp = forwardI.Cross(velI);
-    upwardI = forwardI.Cross(tmp).Normalize();
-  }
-  else
-  {
-    upwardI = pose.Rot().RotateVector(this->upward);
-  }
+	// ldNormal vector to lift-drag-plane described in inertial frame
+	ignition::math::Vector3d ldNormal = forwardI.Cross (upwardI).Normalize ();
+	// TODOS ESSES PRODUTOS VETORIAIS SÃO PRA PEGAR OS VETORES PERPENDICULARES
 
-  // spanwiseI: a vector normal to lift-drag-plane described in inertial frame
-  ignition::math::Vector3d spanwiseI = forwardI.Cross(upwardI).Normalize();
+	//ignition::math::Vector3d velInLDPlane = ldNormal.Cross(aw.Cross(ldNormal)); // isso é igual ao vel, só que escalado????
+	ignition::math::Vector3d velInLDPlane = aw;
+	// get direction of drag
+	ignition::math::Vector3d dragDirection = velInLDPlane;
+	dragDirection.Normalize ();
 
-  const double minRatio = -1.0;
-  const double maxRatio = 1.0;
-  // check sweep (angle between velI and lift-drag-plane)
-  double sinSweepAngle = ignition::math::clamp(
-      spanwiseI.Dot(velI), minRatio, maxRatio);
+	// get direction of lift
+	// ignition::math::Vector3d liftDirection = ldNormal.Cross(velInLDPlane);
+	ignition::math::Vector3d liftDirection = -ldNormal.Cross (velInLDPlane);
+	liftDirection.Normalize ();
 
-  // get cos from trig identity
-  double cosSweepAngle = 1.0 - sinSweepAngle * sinSweepAngle;
-  this->sweep = asin(sinSweepAngle);
+	// get direction of moment
+	ignition::math::Vector3d momentDirection = ldNormal;
 
-  // truncate sweep to within +/-90 deg
-  while (fabs(this->sweep) > 0.5 * M_PI)
-    this->sweep = this->sweep > 0 ? this->sweep - M_PI
-                                  : this->sweep + M_PI;
+	double cosAlpha = ignition::math::clamp (forwardI.Dot (velInLDPlane) / (forwardI.Length () * velInLDPlane.Length ()),
+	                               -1.0, 1.0);
 
-  // angle of attack is the angle between
-  // velI projected into lift-drag plane
-  //  and
-  // forward vector
-  //
-  // projected = spanwiseI Xcross ( vector Xcross spanwiseI)
-  //
-  // so,
-  // removing spanwise velocity from vel
-  ignition::math::Vector3d velInLDPlane = vel - vel.Dot(spanwiseI)*velI;
+	// get sign of alpha
+	// take upwards component of velocity in lift-drag plane.
+	// if sign == upward, then alpha is negative
+	double alphaSign = -upwardI.Dot (velInLDPlane) / (upwardI.Length () + velInLDPlane.Length ());
 
-  // get direction of drag
-  ignition::math::Vector3d dragDirection = -velInLDPlane;
-  dragDirection.Normalize();
+	// double sinAlpha = sqrt(1.0 - cosAlpha * cosAlpha);
+	if (alphaSign > 0.0)
+		this->alpha = acos (cosAlpha);
+	else
+		this->alpha = -acos (cosAlpha);
 
-  // get direction of lift
-  ignition::math::Vector3d liftI = spanwiseI.Cross(velInLDPlane);
-  liftI.Normalize();
+	// compute dynamic pressure
+	double speedInLDPlane = velInLDPlane.Length();
+	double q = 0.5 * this->rho * speedInLDPlane * speedInLDPlane;
 
-  // get direction of moment
-  ignition::math::Vector3d momentDirection = spanwiseI;
+	// compute cl at cp, check for stall, correct for sweep
 
-  // compute angle between upwardI and liftI
-  // in general, given vectors a and b:
-  //   cos(theta) = a.Dot(b)/(a.Length()*b.Lenghth())
-  // given upwardI and liftI are both unit vectors, we can drop the denominator
-  //   cos(theta) = a.Dot(b)
-  double cosAlpha =
-    ignition::math::clamp(liftI.Dot(upwardI), minRatio, maxRatio);
+	double cl;
 
-  // Is alpha positive or negative? Test:
-  // forwardI points toward zero alpha
-  // if forwardI is in the same direction as lift, alpha is positive.
-  // liftI is in the same direction as forwardI?
-  if (liftI.Dot(forwardI) >= 0.0)
-    this->alpha = this->alpha0 + acos(cosAlpha);
-  else
-    this->alpha = this->alpha0 - acos(cosAlpha);
+	//cl = 8 * sin (2 * this->alpha);
+	cl = 8 * sin (2 * this->alpha);
+	// compute lift force at cp
+	ignition::math::Vector3d lift = cl * q * this->area * liftDirection;
 
-  // normalize to within +/-90 deg
-  while (fabs(this->alpha) > 0.5 * M_PI)
-    this->alpha = this->alpha > 0 ? this->alpha - M_PI
-                                  : this->alpha + M_PI;
+	// compute cd at cp, check for stall, correct for sweep
+	double cd;
+	// make sure drag is positive
+	//cd = fabs(cd);
 
-  // compute dynamic pressure
-  double speedInLDPlane = velInLDPlane.Length();
-  double q = 0.5 * this->rho * speedInLDPlane * speedInLDPlane;
+	cd = 4 * (1 - cos (2 * this->alpha));
+	// drag at cp
+	ignition::math::Vector3d drag = cd * q * this->area * dragDirection;
 
-  // compute cl at cp, check for stall, correct for sweep
-  double cl;
-  if (this->alpha > this->alphaStall)
-  {
-    cl = (this->cla * this->alphaStall +
-          this->claStall * (this->alpha - this->alphaStall))
-         * cosSweepAngle;
-    // make sure cl is still great than 0
-    cl = std::max(0.0, cl);
-  }
-  else if (this->alpha < -this->alphaStall)
-  {
-    cl = (-this->cla * this->alphaStall +
-          this->claStall * (this->alpha + this->alphaStall))
-         * cosSweepAngle;
-    // make sure cl is still less than 0
-    cl = std::min(0.0, cl);
-  }
-  else
-    cl = this->cla * this->alpha * cosSweepAngle;
+	// compute cm at cp, check for stall, correct for sweep
+	double cm;
+	// reset cm to zero, as cm needs testing
+	cm = 0.0;
 
-  // modify cl per control joint value
-  if (this->controlJoint)
-  {
-    double controlAngle = this->controlJoint->Position(0);
-    cl = cl + this->controlJointRadToCL * controlAngle;
-    /// \TODO: also change cm and cd
-  }
+	// compute moment (torque) at cp
+	ignition::math::Vector3d moment = cm * q * this->area * momentDirection;
 
-  // compute lift force at cp
-  ignition::math::Vector3d lift = cl * q * this->area * liftI;
+	// moment arm from cg to cp in inertial plane
+	ignition::math::Vector3d momentArm = pose.Rot().RotateVector (this->cp - this->link->GetInertial()->CoG());
 
-  // compute cd at cp, check for stall, correct for sweep
-  double cd;
-  if (this->alpha > this->alphaStall)
-  {
-    cd = (this->cda * this->alphaStall +
-          this->cdaStall * (this->alpha - this->alphaStall))
-         * cosSweepAngle;
-  }
-  else if (this->alpha < -this->alphaStall)
-  {
-    cd = (-this->cda * this->alphaStall +
-          this->cdaStall * (this->alpha + this->alphaStall))
-         * cosSweepAngle;
-  }
-  else
-    cd = (this->cda * this->alpha) * cosSweepAngle;
+	// force and torque about cg in inertial frame
+	ignition::math::Vector3d force = lift + drag;
+	// + moment.Cross(momentArm);
 
-  // make sure drag is positive
-  cd = fabs(cd);
+	ignition::math::Vector3d torque = moment;
 
-  // drag at cp
-  ignition::math::Vector3d drag = cd * q * this->area * dragDirection;
+	//std::cerr<<"\n forceSail["<<force.Length()<<"]: "<<force;
+	// apply forces at cg (with torques for position shift)
+	this->link->AddForceAtRelativePosition (force, this->cp);
 
-  // compute cm at cp, check for stall, correct for sweep
-  double cm;
-  if (this->alpha > this->alphaStall)
-  {
-    cm = (this->cma * this->alphaStall +
-          this->cmaStall * (this->alpha - this->alphaStall))
-         * cosSweepAngle;
-    // make sure cm is still great than 0
-    cm = std::max(0.0, cm);
-  }
-  else if (this->alpha < -this->alphaStall)
-  {
-    cm = (-this->cma * this->alphaStall +
-          this->cmaStall * (this->alpha + this->alphaStall))
-         * cosSweepAngle;
-    // make sure cm is still less than 0
-    cm = std::min(0.0, cm);
-  }
-  else
-    cm = this->cma * this->alpha * cosSweepAngle;
+//***********************************************************************
+ // // Transform wind from world coordinates to body coordinates
+  // #if GAZEBO_MAJOR_VERSION >= 8
+  //     ignition::math::Vector3d relativeWind =
+  //       this->link->WorldPose().Rot().Inverse().RotateVector(
+  //         this->windDirection*this->wind_speed);
+  // #else
+  //       ignition::math::Vector3d relativeWind =
+  //         this->link->GetWorldPose().rot.Ign().Inverse().RotateVector(
+  //         this->windDirection*velocity);
+  // #endif
+  //     // Calculate apparent wind
+  // #if GAZEBO_MAJOR_VERSION >= 8
+  //     ignition::math::Vector3d apparentWind =
+  //       relativeWind - this->link->RelativeLinearVel();
+  // #else
+  //     ignition::math::Vector3d apparentWind = relativeWind
+  //       - this->link->GetRelativeLinearVel().Ign();
+  // #endif
 
-  /// \TODO: implement cm
-  /// for now, reset cm to zero, as cm needs testing
-  cm = 0.0;
+  // GZ_ASSERT(this->link, "Link was NULL");
+  // // get linear velocity at cp in inertial frame
+  // ignition::math::Vector3d vel = this->link->WorldLinearVel(this->cp);
+  // ignition::math::Vector3d velI = vel;
+  // //ignition::math::Vector3d vel = apparentWind;
+  // //ignition::math::Vector3d velI = apparentWind;
+  // velI.Normalize();
 
-  // compute moment (torque) at cp
-  ignition::math::Vector3d moment = cm * q * this->area * momentDirection;
+  // // smoothing
+  // // double e = 0.8;
+  // // this->velSmooth = e*vel + (1.0 - e)*velSmooth;
+  // // vel = this->velSmooth;
 
-  // moment arm from cg to cp in inertial plane
-  ignition::math::Vector3d momentArm = pose.Rot().RotateVector(
-    this->cp - this->link->GetInertial()->CoG());
-  // gzerr << this->cp << " : " << this->link->GetInertial()->GetCoG() << "\n";
+  // if (vel.Length() <= 0.01)
+  //   return;
 
-  // force and torque about cg in inertial frame
-  //ignition::math::Vector3d force = lift + drag;
-  ignition::math::Vector3d force = lift + drag;
-  // + moment.Cross(momentArm);
+  // // pose of body
+  // ignition::math::Pose3d pose = this->link->WorldPose();
 
-  ignition::math::Vector3d torque = moment;
-  // - lift.Cross(momentArm) - drag.Cross(momentArm);
+  // // rotate forward and upward vectors into inertial frame
+  // ignition::math::Vector3d forwardI = pose.Rot().RotateVector(this->forward);
+
+  // ignition::math::Vector3d upwardI;
+  // if (this->radialSymmetry)
+  // {
+  //   // use inflow velocity to determine upward direction
+  //   // which is the component of inflow perpendicular to forward direction.
+  //   ignition::math::Vector3d tmp = forwardI.Cross(velI);
+  //   upwardI = forwardI.Cross(tmp).Normalize();
+  // }
+  // else
+  // {
+  //   upwardI = pose.Rot().RotateVector(this->upward);
+  // }
+
+  // // spanwiseI: a vector normal to lift-drag-plane described in inertial frame
+  // ignition::math::Vector3d spanwiseI = forwardI.Cross(upwardI).Normalize();
+
+  // const double minRatio = -1.0;
+  // const double maxRatio = 1.0;
+  // // check sweep (angle between velI and lift-drag-plane)
+  // double sinSweepAngle = ignition::math::clamp(
+  //     spanwiseI.Dot(velI), minRatio, maxRatio);
+
+  // // get cos from trig identity
+  // double cosSweepAngle = 1.0 - sinSweepAngle * sinSweepAngle;
+  // this->sweep = asin(sinSweepAngle);
+
+  // // truncate sweep to within +/-90 deg
+  // while (fabs(this->sweep) > 0.5 * M_PI)
+  //   this->sweep = this->sweep > 0 ? this->sweep - M_PI
+  //                                 : this->sweep + M_PI;
+
+  // // angle of attack is the angle between
+  // // velI projected into lift-drag plane
+  // //  and
+  // // forward vector
+  // //
+  // // projected = spanwiseI Xcross ( vector Xcross spanwiseI)
+  // //
+  // // so,
+  // // removing spanwise velocity from vel
+  // ignition::math::Vector3d velInLDPlane = vel - vel.Dot(spanwiseI)*velI;
+
+  // // get direction of drag
+  // ignition::math::Vector3d dragDirection = -velInLDPlane;
+  // dragDirection.Normalize();
+
+  // // get direction of lift
+  // ignition::math::Vector3d liftI = spanwiseI.Cross(velInLDPlane);
+  // liftI.Normalize();
+
+  // // get direction of moment
+  // ignition::math::Vector3d momentDirection = spanwiseI;
+
+  // // compute angle between upwardI and liftI
+  // // in general, given vectors a and b:
+  // //   cos(theta) = a.Dot(b)/(a.Length()*b.Lengthh())
+  // // given upwardI and liftI are both unit vectors, we can drop the denominator
+  // //   cos(theta) = a.Dot(b)
+  // double cosAlpha =
+  //   ignition::math::clamp(liftI.Dot(upwardI), minRatio, maxRatio);
+
+  // // Is alpha positive or negative? Test:
+  // // forwardI points toward zero alpha
+  // // if forwardI is in the same direction as lift, alpha is positive.
+  // // liftI is in the same direction as forwardI?
+  // if (liftI.Dot(forwardI) >= 0.0)
+  //   this->alpha = this->alpha0 + acos(cosAlpha);
+  // else
+  //   this->alpha = this->alpha0 - acos(cosAlpha);
+
+  // // normalize to within +/-90 deg
+  // while (fabs(this->alpha) > 0.5 * M_PI)
+  //   this->alpha = this->alpha > 0 ? this->alpha - M_PI
+  //                                 : this->alpha + M_PI;
+
+  // // compute dynamic pressure
+  // double speedInLDPlane = velInLDPlane.Length();
+  // double q = 0.5 * this->rho * speedInLDPlane * speedInLDPlane;
+
+  // // compute cl at cp, check for stall, correct for sweep
+  // double cl;
+  // if (this->alpha > this->alphaStall)
+  // {
+  //   cl = (this->cla * this->alphaStall +
+  //         this->claStall * (this->alpha - this->alphaStall))
+  //        * cosSweepAngle;
+  //   // make sure cl is still great than 0
+  //   cl = std::max(0.0, cl);
+  // }
+  // else if (this->alpha < -this->alphaStall)
+  // {
+  //   cl = (-this->cla * this->alphaStall +
+  //         this->claStall * (this->alpha + this->alphaStall))
+  //        * cosSweepAngle;
+  //   // make sure cl is still less than 0
+  //   cl = std::min(0.0, cl);
+  // }
+  // else
+  //   cl = this->cla * this->alpha * cosSweepAngle;
+
+  // // modify cl per control joint value
+  // if (this->controlJoint)
+  // {
+  //   double controlAngle = this->controlJoint->Position(0);
+  //   cl = cl + this->controlJointRadToCL * controlAngle;
+  //   /// \TODO: also change cm and cd
+  // }
+
+  // // compute lift force at cp
+  // ignition::math::Vector3d lift = cl * q * this->area * liftI;
+
+  // // compute cd at cp, check for stall, correct for sweep
+  // double cd;
+  // if (this->alpha > this->alphaStall)
+  // {
+  //   cd = (this->cda * this->alphaStall +
+  //         this->cdaStall * (this->alpha - this->alphaStall))
+  //        * cosSweepAngle;
+  // }
+  // else if (this->alpha < -this->alphaStall)
+  // {
+  //   cd = (-this->cda * this->alphaStall +
+  //         this->cdaStall * (this->alpha + this->alphaStall))
+  //        * cosSweepAngle;
+  // }
+  // else
+  //   cd = (this->cda * this->alpha) * cosSweepAngle;
+
+  // // make sure drag is positive
+  // cd = fabs(cd);
+
+  // // drag at cp
+  // ignition::math::Vector3d drag = cd * q * this->area * dragDirection;
+
+  // // compute cm at cp, check for stall, correct for sweep
+  // double cm;
+  // if (this->alpha > this->alphaStall)
+  // {
+  //   cm = (this->cma * this->alphaStall +
+  //         this->cmaStall * (this->alpha - this->alphaStall))
+  //        * cosSweepAngle;
+  //   // make sure cm is still great than 0
+  //   cm = std::max(0.0, cm);
+  // }
+  // else if (this->alpha < -this->alphaStall)
+  // {
+  //   cm = (-this->cma * this->alphaStall +
+  //         this->cmaStall * (this->alpha + this->alphaStall))
+  //        * cosSweepAngle;
+  //   // make sure cm is still less than 0
+  //   cm = std::min(0.0, cm);
+  // }
+  // else
+  //   cm = this->cma * this->alpha * cosSweepAngle;
+
+  // /// \TODO: implement cm
+  // /// for now, reset cm to zero, as cm needs testing
+  // cm = 0.0;
+
+  // // compute moment (torque) at cp
+  // ignition::math::Vector3d moment = cm * q * this->area * momentDirection;
+
+  // // moment arm from cg to cp in inertial plane
+  // ignition::math::Vector3d momentArm = pose.Rot().RotateVector(
+  //   this->cp - this->link->GetInertial()->CoG());
+  // // gzerr << this->cp << " : " << this->link->GetInertial()->GetCoG() << "\n";
+
+  // // force and torque about cg in inertial frame
+  // //ignition::math::Vector3d force = lift + drag;
+  // ignition::math::Vector3d force = lift + drag;
+  // // + moment.Cross(momentArm);
+
+  // ignition::math::Vector3d torque = moment;
+  // // - lift.Cross(momentArm) - drag.Cross(momentArm);
 
   // debug
   //
@@ -437,14 +546,14 @@ void LiftDragPluginNboatSail::OnUpdate()
     std::cerr << "Link: [" << this->link->GetName()
           << "] pose: [" << pose
           << "] dynamic pressure: [" << q << "]\n";
-    std::cerr << "spd: [" << vel.Length()
-          << "] vel: [" << vel << "]\n";
+    //std::cerr << "spd: [" << vel.Length()
+    //      << "] vel: [" << vel << "]\n";
     std::cerr << "LD plane spd: [" << velInLDPlane.Length()
           << "] vel : [" << velInLDPlane << "]\n";
     std::cerr << "forward (inertial): " << forwardI << "\n";
     std::cerr << "upward (inertial): " << upwardI << "\n";
-    std::cerr << "lift dir (inertial): " << liftI << "\n";
-    std::cerr << "Span direction (normal to LD plane): " << spanwiseI << "\n";
+    //std::cerr << "lift dir (inertial): " << liftI << "\n";
+    //std::cerr << "Span direction (normal to LD plane): " << spanwiseI << "\n";
     std::cerr << "sweep: " << this->sweep << "\n";
     std::cerr << "alpha: " << this->alpha << "\n";
     std::cerr << "lift: " << lift << "\n";
