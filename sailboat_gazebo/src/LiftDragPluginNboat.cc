@@ -45,12 +45,12 @@ LiftDragPluginNboat::LiftDragPluginNboat() : cla(1.0), cda(0.01), cma(0.01), rho
 
   // 90 deg stall
   this->alphaStall = 0.5*M_PI;
-  this->claStall = 0.0;
+  this->claStall = 0.5*M_PI;
 
   this->radialSymmetry = false;
 
   /// \TODO: what's flat plate drag?
-  this->cdaStall = 1.0;
+  this->cdaStall = 0.5*M_PI;
   this->cmaStall = 0.0;
 
   /// how much to change CL per every radian of the control joint value
@@ -266,52 +266,55 @@ void LiftDragPluginNboat::OnUpdate()
 
   // compute cl at cp, check for stall, correct for sweep
   double cl;
-  if (this->alpha > this->alphaStall)
-  {
-    cl = (this->cla * this->alphaStall +
-          this->claStall * (this->alpha - this->alphaStall))
-         * cosSweepAngle;
-    // make sure cl is still great than 0
-    cl = std::max(0.0, cl);
-  }
-  else if (this->alpha < -this->alphaStall)
-  {
-    cl = (-this->cla * this->alphaStall +
-          this->claStall * (this->alpha + this->alphaStall))
-         * cosSweepAngle;
-    // make sure cl is still less than 0
-    cl = std::min(0.0, cl);
-  }
-  else
-    cl = this->cla * this->alpha * cosSweepAngle;
+  cl = this->cla * sin (2 * this->alpha);
 
-  // modify cl per control joint value
-  if (this->controlJoint)
-  {
-    double controlAngle = this->controlJoint->Position(0);
-    cl = cl + this->controlJointRadToCL * controlAngle;
-    /// \TODO: also change cm and cd
-  }
+  // if (this->alpha > this->alphaStall)
+  // {
+  //   cl = (this->cla * this->alphaStall +
+  //         this->claStall * (this->alpha - this->alphaStall))
+  //        * cosSweepAngle;
+  //   // make sure cl is still great than 0
+  //   cl = std::max(0.0, cl);
+  // }
+  // else if (this->alpha < -this->alphaStall)
+  // {
+  //   cl = (-this->cla * this->alphaStall +
+  //         this->claStall * (this->alpha + this->alphaStall))
+  //        * cosSweepAngle;
+  //   // make sure cl is still less than 0
+  //   cl = std::min(0.0, cl);
+  // }
+  // else
+  //   cl = this->cla * this->alpha * cosSweepAngle;
+  // 
+  // // modify cl per control joint value
+  // if (this->controlJoint)
+  // {
+  //   double controlAngle = this->controlJoint->Position(0);
+  //   cl = cl + this->controlJointRadToCL * controlAngle;
+  //   /// \TODO: also change cm and cd
+  // }
 
   // compute lift force at cp
   ignition::math::Vector3d lift = cl * q * this->area * liftI;
 
   // compute cd at cp, check for stall, correct for sweep
   double cd;
-  if (this->alpha > this->alphaStall)
-  {
-    cd = (this->cda * this->alphaStall +
-          this->cdaStall * (this->alpha - this->alphaStall))
-         * cosSweepAngle;
-  }
-  else if (this->alpha < -this->alphaStall)
-  {
-    cd = (-this->cda * this->alphaStall +
-          this->cdaStall * (this->alpha + this->alphaStall))
-         * cosSweepAngle;
-  }
-  else
-    cd = (this->cda * this->alpha) * cosSweepAngle;
+  cd = this->cda * (1 - cos (2 * this->alpha));
+  // if (this->alpha > this->alphaStall)
+  // {
+  //   cd = (this->cda * this->alphaStall +
+  //         this->cdaStall * (this->alpha - this->alphaStall))
+  //        * cosSweepAngle;
+  // }
+  // else if (this->alpha < -this->alphaStall)
+  // {
+  //   cd = (-this->cda * this->alphaStall +
+  //         this->cdaStall * (this->alpha + this->alphaStall))
+  //        * cosSweepAngle;
+  // }
+  // else
+  //   cd = (this->cda * this->alpha) * cosSweepAngle;
 
   // make sure drag is positive
   cd = fabs(cd);
@@ -354,7 +357,7 @@ void LiftDragPluginNboat::OnUpdate()
 
   // force and torque about cg in inertial frame
   //ignition::math::Vector3d force = lift + drag;
-  ignition::math::Vector3d force = lift;
+  ignition::math::Vector3d force = lift + drag;
   // + moment.Cross(momentArm);
 
   ignition::math::Vector3d torque = moment;

@@ -281,7 +281,7 @@ void LiftDragPluginNboatSail::OnUpdate()
 	double cl;
 
 	//cl = 8 * sin (2 * this->alpha);
-	cl = 8 * sin (2 * this->alpha);
+	cl = this->cla * sin (2 * this->alpha);
 	// compute lift force at cp
 	ignition::math::Vector3d lift = cl * q * this->area * liftDirection;
 
@@ -290,7 +290,7 @@ void LiftDragPluginNboatSail::OnUpdate()
 	// make sure drag is positive
 	//cd = fabs(cd);
 
-	cd = 4 * (1 - cos (2 * this->alpha));
+	cd = this->cda * (1 - cos (2 * this->alpha));
 	// drag at cp
 	ignition::math::Vector3d drag = cd * q * this->area * dragDirection;
 
